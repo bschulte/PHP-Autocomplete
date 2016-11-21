@@ -12,7 +12,8 @@
     ],
     "activationEvents": [
         "onCommand:extension.sayHello",
-        "onCommand:extension.indexPhpFiles"
+        "onCommand:extension.indexPhpFiles",
+        "onCommand:extension.printPhpFiles"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -24,6 +25,10 @@
         {
             "command": "extension.indexPhpFiles",
             "title": "PHP Autocomplete - Index PHP Files"
+        },
+        {
+            "command": "extension.printPhpFiles",
+            "title": "PHP Autocomplete - Print PHP Files"
         }
 ]
     },
