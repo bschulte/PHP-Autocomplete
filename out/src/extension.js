@@ -3,15 +3,16 @@
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
 const phpMode_1 = require('./phpMode');
-let phpFileFunctions = {};
-let phpFileIncludes = {};
+const phpFunctionSuggestions_1 = require('./phpFunctionSuggestions');
+exports.phpFileFunctions = {};
+exports.phpFileIncludes = {};
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
     vscode.workspace.onDidSaveTextDocument(function (document) {
         indexPhpFiles();
     });
-    // Setup our class as a completion item provider
+    // Setup our class as a completion item provider for function autocomplete
     context.subscriptions.push(vscode.languages.registerCompletionItemProvider(phpMode_1.PHP_MODE, {
         provideCompletionItems(document, position, token) {
             // console.log(document);
@@ -30,15 +31,15 @@ function activate(context) {
             let suggestions = [];
             // Check what files the current document includes/requires
             let currentFileName = document.uri.fsPath.replace(vscode.workspace.rootPath, '').slice(1).replace('\\', '/');
-            if (currentFileName in phpFileIncludes) {
+            if (currentFileName in exports.phpFileIncludes) {
                 // Look through all included/required files for the current document
-                phpFileIncludes[currentFileName].forEach(function (file) {
-                    if (file in phpFileFunctions) {
+                exports.phpFileIncludes[currentFileName].forEach(function (file) {
+                    if (file in exports.phpFileFunctions) {
                         // Look through all the functions declared in the included/required file
-                        phpFileFunctions[file].forEach(function (func) {
+                        exports.phpFileFunctions[file].forEach(function (func) {
                             // If the included/required function starts with the letter of our current word then add it to the set of suggestions
-                            if (func.startsWith(currentWord)) {
-                                let newSuggestion = new vscode.CompletionItem(func, vscode.CompletionItemKind.Function);
+                            if (func.function.startsWith(currentWord)) {
+                                let newSuggestion = new vscode.CompletionItem(func.function, vscode.CompletionItemKind.Function);
                                 newSuggestion.detail = "PHP file(" + file + ")";
                                 suggestions.push(newSuggestion);
                             }
@@ -52,6 +53,8 @@ function activate(context) {
             return suggestions;
         }
     }));
+    // Setup our plugin to help with function signatures
+    context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(phpMode_1.PHP_MODE, new phpFunctionSuggestions_1.PhpSignatureHelpProvider(vscode.workspace.getConfiguration('php')['docsTool']), '(', ','));
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "PHP-Autocomplete" is now active!');
@@ -68,8 +71,8 @@ function activate(context) {
         indexPhpFiles();
     });
     let printDisposable = vscode.commands.registerCommand('extension.printPhpFiles', () => {
-        console.log(phpFileFunctions);
-        console.log(phpFileIncludes);
+        console.log(exports.phpFileFunctions);
+        console.log(exports.phpFileIncludes);
     });
     context.subscriptions.push(disposable);
     context.subscriptions.push(indexDisposable);
@@ -83,8 +86,8 @@ exports.deactivate = deactivate;
 // Function to handle the indexing of PHP files
 function indexPhpFiles() {
     // Clear out the cached data
-    phpFileIncludes = {};
-    phpFileFunctions = {};
+    exports.phpFileIncludes = {};
+    exports.phpFileFunctions = {};
     let indexResult = vscode.workspace.findFiles("**/*.php", "", 1000).then(function (list) {
         if (list) {
             let p = new Promise(function (resolve, reject) {
@@ -92,8 +95,8 @@ function indexPhpFiles() {
                     let path = phpFile.fsPath;
                     // console.log("PHP file: " + path);
                     let fileName = path.replace(vscode.workspace.rootPath, "").slice(1).replace('\\', '/');
-                    if (!(fileName in phpFileFunctions)) {
-                        phpFileFunctions[fileName] = [];
+                    if (!(fileName in exports.phpFileFunctions)) {
+                        exports.phpFileFunctions[fileName] = [];
                     }
                     // Read through the PHP file for includes/requires and function definitions
                     var lineReader = require('readline').createInterface({
@@ -104,17 +107,33 @@ function indexPhpFiles() {
                         let functionRegex = /.*function (.*?\))/;
                         let match = functionRegex.exec(line);
                         if (match) {
-                            phpFileFunctions[fileName].push(match[1]);
+                            // Parse out the parameters for the function
+                            let paramRegex = /(\$.*?)[ ,\)]/gi;
+                            let m;
+                            let params = [];
+                            while ((m = paramRegex.exec(match[1])) !== null) {
+                                // This is necessary to avoid infinite loops with zero-width matches
+                                if (m.index === paramRegex.lastIndex) {
+                                    paramRegex.lastIndex++;
+                                }
+                                // The result can be accessed through the `m`-variable.
+                                m.forEach((match, groupIndex) => {
+                                    if (groupIndex == 1) {
+                                        params.push(match);
+                                    }
+                                });
+                            }
+                            exports.phpFileFunctions[fileName].push({ function: match[1].split('(')[0], params: params });
                         }
                         // Check for require or includes
-                        let includeRegex = /(include.*|require.*)\(['"](.*?)['"]/;
+                        let includeRegex = /(include.*|require.*)\(*['"](.*?)['"]/;
                         match = includeRegex.exec(line);
                         if (match) {
-                            if (!(fileName in phpFileIncludes)) {
-                                phpFileIncludes[fileName] = [];
+                            if (!(fileName in exports.phpFileIncludes)) {
+                                exports.phpFileIncludes[fileName] = [];
                             }
                             // console.log("Found include (in file: " + fileName + "): " + match[2].replace('../', ''));
-                            phpFileIncludes[fileName].push(match[2].replace('../', ''));
+                            exports.phpFileIncludes[fileName].push(match[2].replace('../', ''));
                         }
                     });
                 });
