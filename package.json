@@ -1,9 +1,9 @@
 {
     "name": "php-autocomplete",
     "displayName": "PHP-Autocomplete",
-    "description": "Simple PHP autocompletion for functions in included files.",
+    "description": "",
     "version": "0.0.1",
-    "publisher": "BrianSchulte",
+    "publisher": "bschulte",
     "engines": {
         "vscode": "^1.5.0"
     },
@@ -17,15 +17,15 @@
     "main": "./out/src/extension",
     "contributes": {
         "commands": [
-            {
-                "command": "extension.sayHello",
-                "title": "Hello World"
-            },
-            {
-                "command": "extension.indexPhpFiles",
-                "title": "PHP Autocomplete - Index PHP Files"
-            }
-        ]
+        {
+            "command": "extension.sayHello",
+            "title": "Hello World"
+        },
+        {
+            "command": "extension.indexPhpFiles",
+            "title": "PHP Autocomplete - Index PHP Files"
+        }
+]
     },
     "scripts": {
         "vscode:prepublish": "tsc -p ./",

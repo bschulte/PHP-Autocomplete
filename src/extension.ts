@@ -3,10 +3,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
-var fs = require( 'fs' );
-var path = require( 'path' );
-
-var phpFiles : string[] = []
+let phpFiles : string[] = [];
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -14,9 +11,8 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
-    console.log('Congratulations, your extension "php-autocomplete" is now active!');
+    console.log('Congratulations, your extension "test" is now active!');
 
-    
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with  registerCommand
     // The commandId parameter must match the command field in package.json
@@ -27,31 +23,40 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showInformationMessage('Hello World!');
     });
 
-    // Handle the indexing of PHP files
-    let indexReturn = vscode.commands.registerCommand('extension.indexPhpFiles', () => {
-        // Interate through all the files in the project and find the PHP files
-        // Loop through all the files in the temp directory
-        vscode.window.showInformationMessage("Trying to index PHP files now...");
-        vscode.workspace.findFiles("**/*.php", "**/node_modules/**", 1000).then( result => {
-            result.forEach( function( file, index ) {
-                console.log("File: " + file);
-                phpFiles.push(file.path);
-            } );
-        });
-        
-       
-        fs.readdir( vscode.workspace.findFiles("**/*.js", "", 1000, ), function( err, files ) {
-            if( err ) {
-                console.error( "Could not list the directory.", err );
-                process.exit( 1 );
-            } 
-           
-        } );
-    });
+    let indexDisposable = vscode.commands.registerCommand('extension.indexPhpFiles', () => {
+        // The code you place here will be executed every time your command is executed
+        indexPhpFiles();
+    });    
 
     context.subscriptions.push(disposable);
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {
+}
+
+// Function to handle the indexing of PHP files
+function indexPhpFiles(){
+    let indexResult = vscode.workspace.findFiles("**/*.php","",1000).then( function(list) {
+        if (list){
+            list.forEach( (phpFile) => {
+                console.log("PHP file: " + phpFile.path);
+                phpFiles.push(phpFile.path);
+                
+                // Read through the PHP file for includes/requires and function definitions
+                var lineReader = require('readline').createInterface({
+                    input: require('fs').createReadStream(phpFile.path)
+                });
+
+                lineReader.on('line', function (line) {
+                    console.log('Line from file:', line);
+                });
+
+            });
+        } else{
+            console.log("No workspace defined");
+        }
+    }, function(reason){
+        console.log("Error: " + reason);
+    });
 }
