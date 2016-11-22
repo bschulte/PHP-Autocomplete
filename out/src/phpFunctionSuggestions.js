@@ -33,14 +33,17 @@ class PhpSignatureHelpProvider {
                             func.params.forEach(function (param) {
                                 si.parameters.push(param);
                             });
+                            // Set the documentation of the SignatureInformation to be the full function signature
+                            si.documentation = file + " : " + func.function + "(" + si.parameters.join(',') + ')';
                             result.signatures = [si];
                             result.activeSignature = 0;
                             result.activeParameter = Math.min(theCall.commas.length, si.parameters.length - 1);
+                            result.signatures[0].label = functionName + ": " + result.signatures[0].parameters[result.activeParameter];
                         }
                     });
                 }
             });
-            console.log("Result: ", result);
+            // console.log("Result: ", result);
             return Promise.resolve(result);
         }
         else {

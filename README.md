@@ -19,10 +19,9 @@ No settings so far
 None so far
 
 ## Release Notes
+* Actually load the extension when PHP files are open without having to issue a command
+* Couple of bug fixes to better detect include/require statements
+* Function parameter suggestions
 
-First release!
-
-### 0.1
-
-Initial release of the extension. Support for very basic autocomplete of functions included through require/include statements that aren't part of a class structure.
+### 0.4.3
 -----------------------------------------------------------------------------------------------------------

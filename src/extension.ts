@@ -11,6 +11,9 @@ export let phpFileIncludes = {};
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+    // Do the initial indexing
+    indexPhpFiles();
+
     vscode.workspace.onDidSaveTextDocument(function (document) {
         indexPhpFiles();
     });
@@ -88,7 +91,7 @@ export function activate(context: vscode.ExtensionContext) {
         console.log(phpFileFunctions);
         console.log(phpFileIncludes);
     });
-
+    
     context.subscriptions.push(disposable);
     context.subscriptions.push(indexDisposable);
     context.subscriptions.push(printDisposable);
