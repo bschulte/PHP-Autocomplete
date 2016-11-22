@@ -19,9 +19,13 @@ No settings so far
 None so far
 
 ## Release Notes
+## 0.4.2`
+
 * Actually load the extension when PHP files are open without having to issue a command
 * Couple of bug fixes to better detect include/require statements
 * Function parameter suggestions
 
-### 0.4.3
+## Links
+
+[Github Link](https://github.com/bschulte/PHP-Autocomplete)
 -----------------------------------------------------------------------------------------------------------
